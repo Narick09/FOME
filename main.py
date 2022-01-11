@@ -3,25 +3,29 @@ import math
 import Calculator as calc
 import matplotlib.pyplot as plt
 
-x0 = -1
-v0 = 0
+x0 = -2
+v0 = -1
 total_time = 10
 N = 1000000
-m = 1.6e-5
+m = 1.67e-27
 step_t = total_time / N
+w = 2
+g = 10
 
 def potent_E(x):
-    #return math.sin(x)
-    return m * x ** 2 / 2
-    # if -2 <= x and x <= 2:
-    #     return x ** 2 / 2
-    # return 0
+    return m * w**2 * x ** 2 / 2
 
+def potent_E2(x):
+    return m * g * x
 
+def U_(x):
+    return potent_E2(x)
 
 if __name__ == '__main__':
 
-    t, x, v = calc.eqSolut(potent_E, m, x0, v0, total_time, step_t)
+    t, x, v = calc.eqSolut(U_, m, x0, v0, total_time, step_t)
+
+    #t_x = []
 
     fg = plt.figure(figsize=(12, 7))
     plt.subplot(221)
@@ -49,10 +53,11 @@ if __name__ == '__main__':
     plt.grid()
     plt.legend()
 
-    U_arr = [potent_E(i * 0.1) for i in range(-40, 40)]
     x_arr = [(i * 0.1) for i in range(-40, 40)]
+    U_arr = [U_(i * 0.1) for i in range(-40, 40)]
 
-    E_k_tmp = [((x[i] - x[i-1]) / step_t)**2 * m / 2 + potent_E(x[i - 1]) for i in range(1, len(x))]
+#    E_k_tmp = [((x[i] - x[i-1]) / step_t)**2 * m / 2 + U_(x[i - 1]) for i in range(1, len(x))]
+    E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(x[i - 1]) for i in range(1, len(x))]
     E_k_tmp.append(E_k_tmp[-1])
 
     plt.subplot(224)
@@ -67,10 +72,5 @@ if __name__ == '__main__':
     plt.show()
 
 
-
-
-
-
-
-
-
+def func1():
+    return 0
