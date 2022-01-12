@@ -3,17 +3,15 @@ import Calculator as calc
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-r0 = 200000#-2
-vr_0 = -2
+r0 = -2
+vr_0 = 2
 total_time = 5
 m = 1.67e-27
 step_t = 1e-4
 min_border = -40
 max_border = 40
-R = 1e-2 #мат точка
-#R = 6371 #Earth radius
-G = 6.673e-11  # C
-M = 5.9742e24  # C
+R = 6371 #Earth radius
+
 
 def potent_oscillator(x):
     w = 3
@@ -34,31 +32,42 @@ def gravitational_potential(x):
 
 
 def gravitational_planet_potential(x):
+    G = 6.673e-11 #C
+    M = 5.9742e24 #C
     global min_border
     min_border = 1
     global max_border
     max_border = r0 + 1000
-    # if abs(x - R) < 10:
-    #     return -m * M * G / (R + 10)
-    if abs(x) < R:
-        return -m * M * G / R
+    if abs(x - R) < 10:
+        return -m * M * G / (R + 10)
+    if x < R:
+        return 5e-20
     return -m * M * G / x
 
 
 def U_(x):
-    return gravitational_planet_potential(x)
+    return potent_oscillator(x)
 
-def gravitational_planet_force(x):
-    if abs(x) < R:
-        return -m * M * G / (R**2)
-    return -m * M * G / (x**2)
+
+def force_oscillator(x):
+    w = 3
+    global min_border
+    min_border = -40
+    global max_border
+    max_border = 40
+    return -m * w**2 * x
+
 
 def Force(x):
-    return gravitational_planet_force(x)
+    return force_oscillator(x)
+
+
+func_ = [U_, False]
+#func_ = [Force, True]
 
 def update(val):
     total_time = val
-    t, r, v = calc.eqSolut(Force, m, r0, vr_0, total_time, step_t)
+    t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time, step_t, func_[1])
 
     E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
     E_k_tmp.append(E_k_tmp[-1])
@@ -79,7 +88,7 @@ def update(val):
     fg.canvas.draw_idle()
 
 
-t, r, v = calc.eqSolut(Force, m, r0, vr_0, total_time, step_t)
+t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time, step_t, func_[1])
 fg = plt.figure(figsize=(12, 7))
 plt.subplot(221)
 line_tr, = plt.plot(t, r, label='r')
@@ -107,11 +116,9 @@ E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
 E_k_tmp.append(E_k_tmp[-1])
 
 E_k_tmp.append(E_k_tmp[-1])
-# x_arr = [(i * 0.1) for i in range(-40, 40)]
-# U_arr = [U_(i*0.1) for i in range(-40, 40)]
+x_arr = [(i * 0.1) for i in range(-40, 40)]
 
-x_arr = [i for i in range(1, r0 + 1000)]
-U_arr = [U_(i) for i in range(1, r0 + 1000)]
+U_arr = [U_(i*0.1) for i in range(-40, 40)]
 
 plt.subplot(224)
 plt.plot(x_arr, U_arr, label='U')
