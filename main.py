@@ -3,41 +3,31 @@ import Calculator as calc
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-r0 = -2
+r0 = 200000
 vr_0 = 2
 total_time = 5
 m = 1.67e-27
 step_t = 1e-4
-min_border = -40
-max_border = 40
+min_border = -4
+max_border = 4
 R = 6371 #Earth radius
-
+G = 6.673e-11  # C
+M = 5.9742e24  # C
 
 def potent_oscillator(x):
     w = 3
     global min_border
-    min_border = -40
+    min_border = -4
     global max_border
-    max_border = 40
+    max_border = 4
     return m * w**2 * x ** 2 / 2
 
 
-def gravitational_potential(x):
-    g = 10
-    global min_border
-    min_border = -40
-    global max_border
-    max_border = 40
-    return m * g * x
-
-
 def gravitational_planet_potential(x):
-    G = 6.673e-11 #C
-    M = 5.9742e24 #C
     global min_border
     min_border = 1
     global max_border
-    max_border = r0 + 1000
+    max_border = R * 100
     if abs(x - R) < 10:
         return -m * M * G / (R + 10)
     if x < R:
@@ -45,25 +35,29 @@ def gravitational_planet_potential(x):
     return -m * M * G / x
 
 
-def U_(x):
-    return potent_oscillator(x)
-
-
 def force_oscillator(x):
     w = 3
-    global min_border
-    min_border = -40
-    global max_border
-    max_border = 40
     return -m * w**2 * x
 
 
+def gravitational_planet_force(x):
+    global min_border
+    min_border = 1
+    global max_border
+    max_border = R * 100
+    return -m * M * G / x**2
+
+
+def U_(x):
+    return gravitational_planet_potential(x)
+
+
 def Force(x):
-    return force_oscillator(x)
+    return gravitational_planet_force(x)
 
 
-func_ = [U_, False]
-#func_ = [Force, True]
+#func_ = [U_, False]
+func_ = [Force, True]
 
 def update(val):
     total_time = val
@@ -116,9 +110,9 @@ E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
 E_k_tmp.append(E_k_tmp[-1])
 
 E_k_tmp.append(E_k_tmp[-1])
-x_arr = [(i * 0.1) for i in range(-40, 40)]
-
-U_arr = [U_(i*0.1) for i in range(-40, 40)]
+koef = 1
+x_arr = [(i / koef) for i in range(min_border * koef, max_border * koef)]
+U_arr = [U_(i / koef) for i in range(min_border * koef, max_border * koef)]
 
 plt.subplot(224)
 plt.plot(x_arr, U_arr, label='U')
