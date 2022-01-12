@@ -5,20 +5,45 @@ from matplotlib.widgets import Slider
 
 r0 = -2
 vr_0 = -5
-total_time = 2
+total_time = 5
 N = 100000
 m = 1.67e-27
 step_t = total_time / N
+min_border = -40
+max_border = 40
+R = 6371 #Earth radius
 
 
 def potent_oscillator(x):
     w = 3
+    global min_border
+    min_border = -40
+    global max_border
+    max_border = 40
     return m * w**2 * x ** 2 / 2
 
 
 def gravitational_potential(x):
     g = 10
+    global min_border
+    min_border = -40
+    global max_border
+    max_border = 40
     return m * g * x
+
+
+def gravitational_planet_potential(x):
+    G = 6.673e-11 #C
+    M = 5.9742e24 #C
+    global min_border
+    min_border = 1
+    global max_border
+    max_border = r0 + 1000
+    if abs(x - R) < 10:
+        return -m * M * G / (R + 10)
+    if x < R:
+        return 5e-20
+    return -m * M * G / x
 
 
 def U_(x):
@@ -32,7 +57,6 @@ def update(val):
 
     E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
     E_k_tmp.append(E_k_tmp[-1])
-
     E_k_tmp.append(E_k_tmp[-1])
 
     line_rv.set_xdata(r)
@@ -54,23 +78,21 @@ t, r, v = calc.eqSolut(U_, m, r0, vr_0, total_time, step_t)
 fg = plt.figure(figsize=(12, 7))
 plt.subplot(221)
 line_tr, = plt.plot(t, r, label='r')
-plt.title('functions')
+plt.title('Coordinate')
 plt.xlabel('t')
 plt.ylabel('r')
 plt.grid()
 
-plt.legend()
 plt.subplot(222)
 line_tv, = plt.plot(t, v, label='v')
-plt.title('functions')
+plt.title('Speed')
 plt.xlabel('t')
 plt.ylabel('v')
 plt.grid()
 
-plt.legend()
 plt.subplot(223)
 line_rv, = plt.plot(r, v, label='v_rad(x)')
-plt.title('functions')
+plt.title('V (x)')
 plt.xlabel('r')
 plt.ylabel('v_rad')
 plt.grid()
@@ -83,6 +105,7 @@ E_k_tmp.append(E_k_tmp[-1])
 x_arr = [(i * 0.1) for i in range(-40, 40)]
 
 U_arr = [U_(i*0.1) for i in range(-40, 40)]
+
 plt.subplot(224)
 plt.plot(x_arr, U_arr, label='U')
 line_rE, = plt.plot(r, E_k_tmp, 'r-.', label='particle Energy')
@@ -91,13 +114,12 @@ plt.xlabel('r')
 plt.ylabel('E')
 plt.grid()
 
-
 ax_total_time = plt.axes([0.1, 0.025, 0.8, 0.0125])
 total_time_slider = Slider(
     ax=ax_total_time,
     label="t",
     valmin=0,
-    valmax=20,
+    valmax=100,
     valinit=total_time,
     valstep=1
 )
