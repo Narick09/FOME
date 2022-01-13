@@ -25,7 +25,6 @@ def eqSolut(func, m, xCoordinate_0, speed_0, total_time, step_t, mode=False):
     dx = 1e-10  # сколько тут надо взять???
 
     a0 = accelerate(func, xCoordinate_0, dx, m)
-    print(a0)
     v_12 = speed_0 + a0 * step_t / 2  # v_12
     v.append(v_12)
 
