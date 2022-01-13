@@ -18,8 +18,6 @@ total_time = 512700  # граничное время, при котором
 # max_border = 4
 # koef = 0  # для отображения графика
 
-# r0 = 200000
-# vr_0 = 2
 global r0  # = np.array([0, 0])
 global vr_0  # = np.array([0, 0])
 
@@ -86,35 +84,15 @@ def trans(x, y):
             hi = 2 * np.pi - np.arccos(temp)
     return r_temp, hi
 
+
 def gravitational_planet_force_2D(r_vec):
     A = -m * M * G
     if r_vec[0]**2 + r_vec[1]**2 <= R**2:
-        return np.array([0, 0])  # до радиуса Земли разгоняемся, потом - нет
-    # надо попробовать указать здесь числа зза вычетом радиуса
-    # внизу просто формула (А / |r|**2) * (r / |r|), преобразованная
-    # (поделил каждую компоненту на х и у соответственно), чтобы знаменатели
-    # были не такими большими и не выдавали nan
+        return np.array([0, 0])
 
     arr_r, arr_hi = trans(r_vec[0], r_vec[1])
-    # print(arr_r)
-    # print(arr_hi)
     return np.array([A * np.cos(arr_hi) / arr_r**2,
                      A * np.sin(arr_hi) / arr_r**2])
-    # scale = 10
-    # if r_vec[0] > scale and r_vec[1] > scale:
-    #     return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / (r_vec[0])**(1.0/3))**2)**(3.0/2),
-    #                      A / ((r_vec[0] / (r_vec[1])**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
-    # elif r_vec[0] <= scale < r_vec[1]:
-    #     return np.array([A * r_vec[0] / r_vec[1] ** 1.5,
-    #                      A / ((r_vec[0] / (r_vec[1])**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
-    # elif r_vec[1] <= scale < r_vec[0]:
-    #     return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / (r_vec[0])**(1.0/3))**2)**(3.0/2),
-    #                      A * r_vec[1] / r_vec[0] ** 1.5])
-    # else:
-    #     return np.array([A * r_vec[0] / r_vec[1] ** 1.5,
-    #                      A * r_vec[1] / r_vec[0] ** 1.5])
-    # return np.array([A * r_vec[0] / ((r_vec[0])**2 + (r_vec[1])**2)**(3.0/2),
-    #                  A * r_vec[1] / ((r_vec[0])**2 + (r_vec[1])**2)**(3.0/2)])
 
 
 #global U_
@@ -131,7 +109,7 @@ def set_params(mode=True):
     global Force
 
     if mode:  # здесь настраиваются начальные параметры для 2д случая
-        vr_0 = np.array([-4000.0, 0.0])  # начальная скорость - из положительной области х движемся влево
+        vr_0 = np.array([-3000.0, 0.0])  # начальная скорость - из положительной области х движемся влево
         # такое число, потому что иначе будет тупо перпендикулярное падение на Землю
         # при попытке увеличить время, выдает ошибку, что сильно большие числа. Мб скорость становится слишком уж большой
         # скорее всего, где-то неправильно считается сила
@@ -152,21 +130,24 @@ def set_params(mode=True):
 
 
 def update(val):
-    total_time = val
-    t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time, step_t, func_[1])
+    t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time_slider.val, step_t, func_[1])
     # uncomment all it
     # E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
     # E_k_tmp.append(E_k_tmp[-1])
     # E_k_tmp.append(E_k_tmp[-1])
+    r_x = [r[i][0] for i in range(0, len(r))]
+    r_y = [r[i][1] for i in range(0, len(r))]
+    v_x = [v[i][0] for i in range(0, len(v))]
+    v_y = [v[i][1] for i in range(0, len(v))]
 
-    # line_rv.set_xdata(r)#change to _xy
-    # line_rv.set_ydata(v)
+    line_xy.set_xdata(r_x)#change to _xy
+    line_xy.set_ydata(r_y)
 
     line_tv.set_xdata(t)
-    line_tv.set_ydata(v)
+    line_tv.set_ydata(v_x)
 
     line_tr.set_xdata(t)
-    line_tr.set_ydata(r)
+    line_tr.set_ydata(r_x)
 
     # line_rE.set_xdata(r)
     # line_rE.set_ydata(E_k_tmp)
@@ -177,8 +158,6 @@ def update(val):
 set_params(True)  # true - Earth, false - oscillator
 # func_ = [U_, False]
 func_ = [Force, True]
-
-#print(gravitational_planet_force_2D(r0))
 
 t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time, step_t, func_[1])
 
