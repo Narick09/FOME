@@ -7,8 +7,8 @@ def accelerate_through_potential(U, xCoordinate_0, dx, m):  # пока толь�
 
 
 def accelerate_through_force(force, xCoordinate_0, dx, m):
+    # print("xCoordinate_0 ", xCoordinate_0)
     # print("force ", force(xCoordinate_0))
-    # print("m ", m)
     # print("force/m ", force(xCoordinate_0) / m)
     return force(xCoordinate_0) / m
 
@@ -20,16 +20,16 @@ def eqSolut(func, m, xCoordinate_0, speed_0, total_time, step_t, mode=False):
     v = []
     t = [0.0]
 
-    accelerate = accelerate_through_potential
     if mode:
         accelerate = accelerate_through_force
-
+    else:
+        accelerate = accelerate_through_potential
     dx = 1e-10  # сколько тут надо взять???
 
     a0 = accelerate(func, xCoordinate_0, dx, m)
-    print(a0 * m)
+    print(a0)
     v_12 = speed_0 + a0 * step_t / 2  # v_12
-    print(v_12)
+    #print(v_12)
     v.append(v_12)
 
     N = int(total_time / step_t)
@@ -40,8 +40,9 @@ def eqSolut(func, m, xCoordinate_0, speed_0, total_time, step_t, mode=False):
         v.append(v[-1] + a0 * step_t)  # v_(n+1/2)
         t.append(i * step_t)
         x.append(x_pr + v[-1] * step_t)
-
-    print(len(x))
-    # print(t[-1])
+    # print("t ", t[-1])
+    # print("x ", x[-1])
+    # print("v ", v[-1])
+    # print("a ", a0)
     return t, x, v
 

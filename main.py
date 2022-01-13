@@ -6,13 +6,13 @@ from matplotlib.widgets import Slider
 # how to Draw 2D U_?
 
 # constants:
-m = 1000#1.67e-27
-R = 6371000  # Earth radius
+m = 1000  # 1.67e-27
+R = 6371000.0  # Earth radius
 G = 6.673e-11  # C
 M = 5.9742e24  # C
 
-step_t = 1
-total_time = 5000
+step_t = 100
+total_time = 512700  # граничное время, при котором
 # graph range - задается в set_params
 # min_border = -4
 # max_border = 4
@@ -20,8 +20,8 @@ total_time = 5000
 
 # r0 = 200000
 # vr_0 = 2
-r0 = np.array([0, 0])
-vr_0 = np.array([0, 0])
+global r0  # = np.array([0, 0])
+global vr_0  # = np.array([0, 0])
 
 
 # def potent_oscillator(x):
@@ -58,16 +58,63 @@ vr_0 = np.array([0, 0])
 #     return -m * M * G / radius
 
 
+def trans(x, y):
+    r_temp = np.sqrt(x**2 + y**2)
+    temp_2 = y / r_temp
+    if temp_2 > 1:
+        temp_3 = np.pi / 2
+    elif temp_2 < -1:
+        temp_3 = -np.pi / 2
+    else:
+        temp_3 = np.arcsin(temp_2)
+
+    if temp_3 >= 0:
+        temp = x / r_temp
+        if temp > 1:
+            hi = 0.0
+        elif temp < -1:
+            hi = np.pi
+        else:
+            hi = np.arccos(temp)
+    else:
+        temp = x / r_temp
+        if temp > 1:
+            hi = 0.0
+        elif temp < -1:
+            hi = np.pi
+        else:
+            hi = 2 * np.pi - np.arccos(temp)
+    return r_temp, hi
+
 def gravitational_planet_force_2D(r_vec):
     A = -m * M * G
-    if r_vec[0]**2 + r_vec[1]**2 <= R:
+    if r_vec[0]**2 + r_vec[1]**2 <= R**2:
         return np.array([0, 0])  # до радиуса Земли разгоняемся, потом - нет
     # надо попробовать указать здесь числа зза вычетом радиуса
     # внизу просто формула (А / |r|**2) * (r / |r|), преобразованная
     # (поделил каждую компоненту на х и у соответственно), чтобы знаменатели
     # были не такими большими и не выдавали nan
-    return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / r_vec[0]**(1.0/3))**2)**(3.0/2),
-                     A / ((r_vec[0] / r_vec[1]**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
+
+    arr_r, arr_hi = trans(r_vec[0], r_vec[1])
+    # print(arr_r)
+    # print(arr_hi)
+    return np.array([A * np.cos(arr_hi) / arr_r**2,
+                     A * np.sin(arr_hi) / arr_r**2])
+    # scale = 10
+    # if r_vec[0] > scale and r_vec[1] > scale:
+    #     return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / (r_vec[0])**(1.0/3))**2)**(3.0/2),
+    #                      A / ((r_vec[0] / (r_vec[1])**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
+    # elif r_vec[0] <= scale < r_vec[1]:
+    #     return np.array([A * r_vec[0] / r_vec[1] ** 1.5,
+    #                      A / ((r_vec[0] / (r_vec[1])**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
+    # elif r_vec[1] <= scale < r_vec[0]:
+    #     return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / (r_vec[0])**(1.0/3))**2)**(3.0/2),
+    #                      A * r_vec[1] / r_vec[0] ** 1.5])
+    # else:
+    #     return np.array([A * r_vec[0] / r_vec[1] ** 1.5,
+    #                      A * r_vec[1] / r_vec[0] ** 1.5])
+    # return np.array([A * r_vec[0] / ((r_vec[0])**2 + (r_vec[1])**2)**(3.0/2),
+    #                  A * r_vec[1] / ((r_vec[0])**2 + (r_vec[1])**2)**(3.0/2)])
 
 
 #global U_
@@ -84,14 +131,14 @@ def set_params(mode=True):
     global Force
 
     if mode:  # здесь настраиваются начальные параметры для 2д случая
-        vr_0 = np.array([-2000, 0])  # начальная скорость - из положительной области х движемся влево
+        vr_0 = np.array([-4000.0, 0.0])  # начальная скорость - из положительной области х движемся влево
         # такое число, потому что иначе будет тупо перпендикулярное падение на Землю
         # при попытке увеличить время, выдает ошибку, что сильно большие числа. Мб скорость становится слишком уж большой
         # скорее всего, где-то неправильно считается сила
         # min_border = 1
         # max_border = R * 100
         # koef = 1
-        r0 = np.array([R + 1 * R, R + 3 * R])
+        r0 = np.array([R + 2 * R, R + 3 * R])
         # U_ = gravitational_planet_potential
         Force = gravitational_planet_force_2D
     else:
