@@ -1,93 +1,107 @@
 import math
+import numpy as np
 import Calculator as calc
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 # how to Draw 2D U_?
 
 # constants:
-m = 200  # 1.67e-27
-R = 6371  # Earth radius
+m = 1000#1.67e-27
+R = 6371000  # Earth radius
 G = 6.673e-11  # C
 M = 5.9742e24  # C
 
-step_t = 1e-4
-total_time = 5
-# graph range
-min_border = -4
-max_border = 4
-koef = 0  # для отображения графика
+step_t = 1
+total_time = 5000
+# graph range - задается в set_params
+# min_border = -4
+# max_border = 4
+# koef = 0  # для отображения графика
 
-r0 = 200000
-vr_0 = 2
-# r0 = [200000, 200000]
-# vr_0 = [-2, 0]
-
-
-def potent_oscillator(x):
-    w = 3
-    return m * w**2 * x ** 2 / 2
+# r0 = 200000
+# vr_0 = 2
+r0 = np.array([0, 0])
+vr_0 = np.array([0, 0])
 
 
-def gravitational_planet_potential(x):
-    if x < R:
-        return 5e-20
-    return -m * M * G / x
-
-
-def force_oscillator(x):
-    w = 3
-    return -m * w**2 * x
-
-
-def gravitational_planet_force(x):
-    return -m * M * G / x**2
-
-
-def gravitational_planet_potential_2D(radius):  # radius = sqrt(x**2 + y**2)
-    # if abs(x - R) < 10:
-    #     return -m * M * G / (R + 10)
-    # if abs(y - R) < 10:
-    #     return -m * M * G / (R + 10)
-    # if x < R:
-    #     return 5e-20
-    # if y < R:
-    #     return 5e-20
-    if radius < R:
-        return 5e-20
-    return -m * M * G / radius
+# def potent_oscillator(x):
+#     w = 3
+#     return m * w**2 * x ** 2 / 2
+#
+#
+# def gravitational_planet_potential(x):
+#     if x < R:
+#         return 5e-20
+#     return -m * M * G / x
+#
+#
+# def force_oscillator(x):
+#     w = 3
+#     return -m * w**2 * x
+#
+#
+# def gravitational_planet_force(x):
+#     return -m * M * G / x**2
+#
+#
+# def gravitational_planet_potential_2D(radius):  # radius = sqrt(x**2 + y**2)
+#     # if abs(x - R) < 10:
+#     #     return -m * M * G / (R + 10)
+#     # if abs(y - R) < 10:
+#     #     return -m * M * G / (R + 10)
+#     # if x < R:
+#     #     return 5e-20
+#     # if y < R:
+#     #     return 5e-20
+#     if radius < R:
+#         return 5e-20
+#     return -m * M * G / radius
 
 
 def gravitational_planet_force_2D(r_vec):
-    return [-m * M * G * 2 * r_vec[0] / (r_vec[0]**2 + r_vec[1]**2)**(3.0/2),
-            -m * M * G * 2 * r_vec[1] / (r_vec[0]**2 + r_vec[1]**2)**(3.0/2)]
+    A = -m * M * G
+    if r_vec[0]**2 + r_vec[1]**2 <= R:
+        return np.array([0, 0])  # до радиуса Земли разгоняемся, потом - нет
+    # надо попробовать указать здесь числа зза вычетом радиуса
+    # внизу просто формула (А / |r|**2) * (r / |r|), преобразованная
+    # (поделил каждую компоненту на х и у соответственно), чтобы знаменатели
+    # были не такими большими и не выдавали nan
+    return np.array([A / ((r_vec[0])**(4.0/3) + (r_vec[1] / r_vec[0]**(1.0/3))**2)**(3.0/2),
+                     A / ((r_vec[0] / r_vec[1]**(1.0/3))**2 + (r_vec[1])**(4.0/3))**(3.0/2)])
 
 
-global U_
+#global U_
 global Force
 
 
 def set_params(mode=True):
-    global min_border
-    global max_border
-    global koef
+    # global min_border
+    # global max_border
+    # global koef
     global r0
+    global vr_0
     global U_
     global Force
 
-    if mode:
-        min_border = 1
-        max_border = R * 100
-        koef = 1
-        r0 = 200000
-        U_ = gravitational_planet_potential
-        Force = gravitational_planet_force
+    if mode:  # здесь настраиваются начальные параметры для 2д случая
+        vr_0 = np.array([-2000, 0])  # начальная скорость - из положительной области х движемся влево
+        # такое число, потому что иначе будет тупо перпендикулярное падение на Землю
+        # при попытке увеличить время, выдает ошибку, что сильно большие числа. Мб скорость становится слишком уж большой
+        # скорее всего, где-то неправильно считается сила
+        # min_border = 1
+        # max_border = R * 100
+        # koef = 1
+        r0 = np.array([R + 1 * R, R + 3 * R])
+        # U_ = gravitational_planet_potential
+        Force = gravitational_planet_force_2D
     else:
-        min_border = -4
-        max_border = 4
-        koef = 10
+        vr_0 = np.array([-2, 0])
+        # min_border = -4
+        # max_border = 4
+        # koef = 10
         r0 = -2
-        U_ = potent_oscillator
-        Force = force_oscillator
+        # U_ = potent_oscillator
+        # Force = force_oscillator
 
 
 def update(val):
@@ -116,33 +130,42 @@ def update(val):
 set_params(True)  # true - Earth, false - oscillator
 # func_ = [U_, False]
 func_ = [Force, True]
+
+#print(gravitational_planet_force_2D(r0))
+
 t, r, v = calc.eqSolut(func_[0], m, r0, vr_0, total_time, step_t, func_[1])
 
 
-# r_x = [r[i][0] for i in range(0, len(r))]
-# r_y = [r[i][1] for i in range(0, len(r))]
+r_x = [r[i][0] for i in range(0, len(r))]
+r_y = [r[i][1] for i in range(0, len(r))]
+v_x = [v[i][0] for i in range(0, len(v))]
+v_y = [v[i][1] for i in range(0, len(v))]
 
 fg = plt.figure(figsize=(12, 7))
 plt.subplot(221)
-line_tr, = plt.plot(t, r, label='r')
+line_tr, = plt.plot(t, r_x, label='r')
 plt.title('Coordinate_x')
 plt.xlabel('t')
 plt.ylabel('r')
 plt.grid()
 
 plt.subplot(222)
-line_tv, = plt.plot(t, v, label='v')
+line_tv, = plt.plot(t, v_x, label='v')
 plt.title('Speed_ x')
 plt.xlabel('t')
 plt.ylabel('v')
 plt.grid()
 
-# plt.subplot(223)
-# line_rv, = plt.plot(r_x, r_y, label='Y(x)')
-# plt.title('y(x)')
-# plt.xlabel('x')
-# plt.ylabel('y')
-# plt.grid()
+plt.subplot(223)
+circle1 = plt.Circle((0, 0), R, color='r', fill=True)
+line_xy, = plt.plot(r_x, r_y, label='Y(x)')
+ax=plt.gca()
+ax.add_patch(circle1)
+#plt.axis('scaled')
+plt.title('y(x)')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.grid()
 
 # ucomment:
 # E_k_tmp = [(v[i]) ** 2 * m / 2 + U_(r[i - 1]) for i in range(1, len(r) - 1)]
@@ -165,7 +188,7 @@ total_time_slider = Slider(
     ax=ax_total_time,
     label="t",
     valmin=0,
-    valmax=100,
+    valmax=10 * total_time,
     valinit=total_time,
     valstep=1
 )
